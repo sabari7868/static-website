@@ -1,5 +1,7 @@
 name: Deploy to S3
 
+name: Deploy Website to S3
+
 on:
   push:
     branches:
@@ -11,25 +13,26 @@ jobs:
 
     steps:
       # Step 1: Checkout the repository code
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Configure AWS credentials for the job
+      # Step 2: Configure AWS Credentials using GitHub Secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}  # Make sure this is set to "us-east-1" in your secrets
 
-      # Step 3: Verify that AWS credentials are working by getting caller identity
+      # Step 3: (Optional) Verify AWS Credentials
       - name: Verify AWS Credentials
         run: aws sts get-caller-identity
 
-      # Step 4: Sync the repository files to your S3 bucket
-      - name: Sync files to S3
-        run: aws s3 sync . s3://cloud-profile-website --delete
+      # Step 4: Sync only the website files from the "static-design" folder to the S3 bucket root
+      - name: Sync Files to S3
+        run: aws s3 sync static-design/ s3://cloud-profile-website --delete
 
-      # Step 5: Invalidate CloudFront cache so your changes appear immediately
+      # Step 5: (Optional) Invalidate CloudFront Cache if you're using CloudFront
       - name: Invalidate CloudFront Cache
-        run: aws cloudfront create-invalidation --distribution-id E2WHBNJ48QORRA --paths "/*"
+        run:  aws cloudfront create-invalidation --distribution-id E2WHBNJ48QORRA --paths "/*"
+
